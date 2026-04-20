@@ -50,8 +50,16 @@ function toNumber(value: number | string | null | undefined) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+// Generic placeholder strings that backend systems put as default values
+const PLACEHOLDER_NAMES = new Set(["category", "product", "string", "text", "name", "title", "item"]);
+
+function isPlaceholder(value: string | null | undefined): boolean {
+  if (!value) return true;
+  return PLACEHOLDER_NAMES.has(value.trim().toLowerCase());
+}
+
 function pickBackendText(...values: Array<string | null | undefined>) {
-  return values.find((value) => value && value.trim())?.trim() ?? "";
+  return values.find((value) => value && value.trim() && !isPlaceholder(value))?.trim() ?? "";
 }
 
 function readErrorMessage(payload: unknown, fallbackStatus: number) {
@@ -137,37 +145,31 @@ async function backendApiFetch<T>(
 }
 
 function buildCategoryTitle(category: BackendCategory, locale: AppLocale) {
-  const base = pickLocalizedText(
+  // Prefer fully-localized name, fall back across locales, skip placeholder strings
+  const localizedName = pickLocalizedText(
     locale,
     {
-      ru: category.name_ru,
-      uz: category.name_uz,
-      en: category.name_en,
+      ru: isPlaceholder(category.name_ru) ? null : category.name_ru,
+      uz: isPlaceholder(category.name_uz) ? null : category.name_uz,
+      en: isPlaceholder(category.name_en) ? null : category.name_en,
     },
-    [category.name],
-  ) || pickBackendText(category.name_ru, category.name_uz, category.name_en, category.name);
+    [isPlaceholder(category.name) ? null : category.name],
+  );
+  const base = localizedName || pickBackendText(category.name_ru, category.name_uz, category.name_en);
   return category.emoji ? `${category.emoji} ${base}`.trim() : base;
 }
 
 function buildProductTitle(product: BackendProduct, locale: AppLocale) {
-  return (
-    pickLocalizedText(
-      locale,
-      {
-        ru: product.name_ru,
-        uz: product.name_uz,
-        en: product.name_en,
-      },
-      [product.name],
-    ) ||
-    pickBackendText(
-      product.name_ru,
-      product.name_uz,
-      product.name_en,
-      product.name,
-      "Product",
-    )
+  const localizedName = pickLocalizedText(
+    locale,
+    {
+      ru: isPlaceholder(product.name_ru) ? null : product.name_ru,
+      uz: isPlaceholder(product.name_uz) ? null : product.name_uz,
+      en: isPlaceholder(product.name_en) ? null : product.name_en,
+    },
+    [isPlaceholder(product.name) ? null : product.name],
   );
+  return localizedName || pickBackendText(product.name_ru, product.name_uz, product.name_en, product.name);
 }
 
 function buildProductDescription(product: BackendProduct, locale: AppLocale) {
@@ -240,7 +242,7 @@ function adaptCatalog(
         products: categoryProducts,
       };
     })
-    .filter((category) => category.products.length > 0);
+    .filter((category) => category.products.length > 0 && category.title.trim().length > 0);
 
   const featuredProducts = normalizedCategories
     .flatMap((category) => category.products)
