@@ -3,21 +3,21 @@
 :root {
   --app-bg: #ffffff;
   --app-surface: #ffffff;
-  --app-surface-strong: #faf8f5;
-  --app-muted: #f5f0ea;
-  --app-border: #ede8e0;
-  --app-text: #1a1208;
-  --app-text-soft: #8a7d6b;
-  --app-accent: #c8864a;
-  --app-accent-strong: #a06830;
-  --app-accent-soft: #fdf3e8;
+  --app-surface-strong: #f7f7f7;
+  --app-muted: #f0f0f0;
+  --app-border: #e0e0e0;
+  --app-text: #1a1a1a;
+  --app-text-soft: #888888;
+  --app-accent: #555555;
+  --app-accent-strong: #333333;
+  --app-accent-soft: #f0f0f0;
   --app-success: #2f7f5b;
   --tg-bg-color: #ffffff;
-  --tg-secondary-bg-color: #faf8f5;
-  --tg-text-color: #1a1208;
-  --tg-hint-color: #8a7d6b;
-  --tg-link-color: #c8864a;
-  --tg-button-color: #c8864a;
+  --tg-secondary-bg-color: #f7f7f7;
+  --tg-text-color: #1a1a1a;
+  --tg-hint-color: #888888;
+  --tg-link-color: #555555;
+  --tg-button-color: #555555;
   --tg-button-text-color: #ffffff;
 }
 
