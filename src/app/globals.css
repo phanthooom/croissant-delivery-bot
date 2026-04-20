@@ -70,6 +70,24 @@ button {
   animation: fade-in 440ms ease both;
 }
 
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--app-muted) 25%,
+    var(--app-surface-strong) 50%,
+    var(--app-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-wave 1.4s ease-in-out infinite;
+  border-radius: 10px;
+}
+
+@keyframes skeleton-wave {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .store-panel {
   background: var(--app-surface);
   border: 1px solid var(--app-border);

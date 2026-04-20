@@ -27,19 +27,51 @@ import {
   type AppLocale,
 } from "@/lib/i18n";
 
-// Leaflet must never run on the server — load it only on client
-const DeliveryMap = dynamic(() => import("./delivery-map"), {
+const YandexMapPicker = dynamic(() => import("./yandex-map-picker"), {
+  ssr: false,
+});
+
+const OrderDetailSheet = dynamic(() => import("./order-detail-sheet"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-[var(--app-muted)] rounded-2xl">
-      <span className="text-2xl animate-pulse">🗺️</span>
+    <div className="fixed inset-0 z-50 flex items-end">
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="relative z-10 w-full max-w-[430px] mx-auto rounded-t-[28px] bg-[var(--app-bg)] h-[70vh] p-5">
+        <div className="skeleton h-6 w-1/3 mb-6 rounded-md" />
+        <div className="skeleton h-16 w-full mb-4 rounded-xl" />
+        <div className="skeleton h-40 w-full rounded-xl" />
+      </div>
+    </div>
+  ),
+});
+const ProductModal = dynamic(() => import("./product-modal"), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed inset-0 z-50 flex items-end">
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="relative z-10 w-full max-w-[430px] mx-auto rounded-t-[28px] bg-[var(--app-bg)] h-[60vh] p-5 flex flex-col gap-4">
+        <div className="skeleton aspect-[4/3] w-full rounded-xl" />
+        <div className="skeleton h-8 w-2/3 rounded-md" />
+        <div className="skeleton h-4 w-1/3 rounded-md" />
+      </div>
+    </div>
+  ),
+});
+const SearchOverlay = dynamic(() => import("./search-overlay"), { ssr: false });
+const LocationModal = dynamic(() => import("./location-modal"), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed inset-0 z-50 flex items-end">
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="relative z-10 w-full max-w-[430px] mx-auto rounded-t-[28px] bg-[var(--app-bg)] h-[50vh] p-5 flex flex-col gap-4">
+        <div className="skeleton h-6 w-1/3 rounded-md" />
+        <div className="skeleton h-14 w-full rounded-2xl" />
+        <div className="skeleton h-32 w-full rounded-2xl" />
+      </div>
     </div>
   ),
 });
 
-const YandexMapPicker = dynamic(() => import("./yandex-map-picker"), {
-  ssr: false,
-});
 import type {
   BackendCart,
   BackendCartItem,
@@ -263,7 +295,7 @@ function UserIcon({ filled }: { filled?: boolean }) {
   );
 }
 
-function SearchIcon() {
+export function SearchIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
       <circle cx="11" cy="11" r="6.5" />
@@ -272,7 +304,7 @@ function SearchIcon() {
   );
 }
 
-function CloseIcon() {
+export function CloseIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M18 6 6 18M6 6l12 12" />
@@ -280,7 +312,7 @@ function CloseIcon() {
   );
 }
 
-function MinusIcon() {
+export function MinusIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
       <path d="M5 12h14" />
@@ -288,7 +320,7 @@ function MinusIcon() {
   );
 }
 
-function PlusIcon() {
+export function PlusIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
       <path d="M12 5v14M5 12h14" />
@@ -304,7 +336,7 @@ function CheckIcon() {
   );
 }
 
-function LocationIcon() {
+export function LocationIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7Z" />
@@ -315,7 +347,7 @@ function LocationIcon() {
 
 // ─── sub-components ───────────────────────────────────────────────────────────
 
-function QuantityControl({
+export function QuantityControl({
   quantity,
   onDecrement,
   onIncrement,
@@ -347,7 +379,7 @@ function QuantityControl({
 
 // ─── delivery tracking helpers ───────────────────────────────────────────────
 
-function statusToStep(status: string | undefined): 0 | 1 | 2 | 3 {
+export function statusToStep(status: string | undefined): 0 | 1 | 2 | 3 {
   if (!status) return 0;
   const s = status.toLowerCase();
   if (["delivered", "completed", "done", "closed", "закрыт", "выполнен"].some(x => s.includes(x))) return 3;
@@ -372,7 +404,7 @@ const BrandLogo = memo(function BrandLogo({ size, light }: { size: number; light
 // ─── shared bottom-sheet drag helper ─────────────────────────────────────────
 // Attach the returned props to the drag-handle div; pass `sheetEl` ref to the
 // sheet container. Tap (dy < 10) or drag > 90px or fast flick → dismiss.
-function makeSheetDragHandlers(
+export function makeSheetDragHandlers(
   sheetEl: { current: HTMLDivElement | null },
   startRef: { current: number },
   currentRef: { current: number },
@@ -464,9 +496,6 @@ export default function MiniAppShell({
   const openLocation = useCallback(() => {
     setMapPickerOpen(true);
   }, []);
-  const [locationDraft, setLocationDraft] = useState("");
-  const [locationLocating, setLocationLocating] = useState(false);
-  const [locationError, setLocationError] = useState("");
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lon: number } | null>(null);
   const stickyHeaderRef = useRef<HTMLDivElement>(null);
   const pillsContainerRef = useRef<HTMLDivElement>(null);
@@ -474,14 +503,6 @@ export default function MiniAppShell({
   const sheetDragStartY = useRef(0);
   const sheetDragCurrentY = useRef(0);
   const sheetDragTime = useRef(0);
-  const locSheetRef = useRef<HTMLDivElement>(null);
-  const locDragStart = useRef(0);
-  const locDragCurrent = useRef(0);
-  const locDragTime = useRef(0);
-  const prodSheetRef = useRef<HTMLDivElement>(null);
-  const prodDragStart = useRef(0);
-  const prodDragCurrent = useRef(0);
-  const prodDragTime = useRef(0);
   // debounce timers & pending quantities for backend cart optimistic updates
   const cartDebounceTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const [optimisticQty, setOptimisticQty] = useState<Record<string, number>>({});
@@ -491,8 +512,6 @@ export default function MiniAppShell({
   const courierIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // geocoded customer coordinates per orderId
   const [customerCoords, setCustomerCoords] = useState<Record<string, { lat: number; lon: number }>>({});
-  // Restaurant fixed location (Tashkent center — replace with your actual restaurant coords)
-  const RESTAURANT = { lat: 41.2995, lon: 69.2401 };
 
   const allProducts = useMemo(
     () => catalog.categories.flatMap((c) => c.products),
@@ -523,12 +542,15 @@ export default function MiniAppShell({
     );
   }, [locale, t.delivery.asap]);
 
+  const [catalogLoading, setCatalogLoading] = useState(false);
+
   async function switchLocale(nextLocale: AppLocale) {
     if (nextLocale === locale) return;
 
     window.localStorage.setItem(LOCALE_STORAGE_KEY, nextLocale);
     document.cookie = `${LOCALE_COOKIE_NAME}=${nextLocale}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
     setLocale(nextLocale);
+    setCatalogLoading(true);
 
     try {
       const res = await fetch(`/api/catalog?locale=${encodeURIComponent(nextLocale)}`, {
@@ -545,6 +567,8 @@ export default function MiniAppShell({
       });
     } catch {
       // Keep the current UI responsive even if localized catalog refresh fails.
+    } finally {
+      setCatalogLoading(false);
     }
   }
 
@@ -954,10 +978,16 @@ export default function MiniAppShell({
   // ── splash timer ─────────────────────────────────────────────────────────
 
   useEffect(() => {
-    const fade = setTimeout(() => setSplashFading(true), 1300);
-    const hide = setTimeout(() => setShowSplash(false), 1800);
-    return () => { clearTimeout(fade); clearTimeout(hide); };
-  }, []);
+    if (!hasHydrated || catalogLoading) return;
+
+    // Убираем заставку быстро, как только готовы локальные данные и язык
+    const fade = setTimeout(() => setSplashFading(true), 50);
+    const hide = setTimeout(() => setShowSplash(false), 350);
+    return () => {
+      clearTimeout(fade);
+      clearTimeout(hide);
+    };
+  }, [hasHydrated, catalogLoading]);
 
   // ── active category on scroll ─────────────────────────────────────────────
 
@@ -1017,7 +1047,39 @@ export default function MiniAppShell({
     );
   }
 
-  function ProductCard({ product }: { product: CatalogProduct }) {
+  function CatalogSkeleton() {
+    return (
+      <div className="fade-in px-4 pt-4 space-y-6">
+        {/* Pills skeleton */}
+        <div className="flex gap-2 overflow-hidden -mx-4 px-4">
+          {[80, 60, 100, 70, 90].map((w, i) => (
+            <div key={i} className="skeleton shrink-0 h-8 rounded-full" style={{ width: w }} />
+          ))}
+        </div>
+        {/* Cards skeleton */}
+        {[1, 2].map((section) => (
+          <div key={section}>
+            <div className="skeleton h-5 w-32 mb-3" />
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="rounded-2xl overflow-hidden border border-[var(--app-border)]">
+                  <div className="skeleton aspect-square" style={{ borderRadius: 0 }} />
+                  <div className="p-2.5 space-y-2">
+                    <div className="skeleton h-4 w-20" />
+                    <div className="skeleton h-3 w-full" />
+                    <div className="skeleton h-3 w-3/4" />
+                    <div className="skeleton h-8 w-full mt-1 rounded-xl" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  function ProductCard({ product, priority = false }: { product: CatalogProduct; priority?: boolean }) {
     const qty = getQuantity(product.id);
     return (
       <div
@@ -1026,7 +1088,15 @@ export default function MiniAppShell({
       >
         <div className="relative aspect-square bg-[var(--app-muted)]">
           {product.imageUrl ? (
-            <Image src={product.imageUrl} alt={product.title} fill sizes="(max-width: 430px) 45vw, 200px" className="object-cover" />
+            <Image
+              src={product.imageUrl}
+              alt={product.title}
+              fill
+              sizes="(max-width: 430px) 45vw, 200px"
+              className="object-cover"
+              priority={priority}
+              loading={priority ? undefined : "lazy"}
+            />
           ) : (
             <div className="flex h-full items-center justify-center text-3xl">🥐</div>
           )}
@@ -1401,9 +1471,9 @@ export default function MiniAppShell({
         label: t.profile.ourBranches,
         icon: (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.8"/>
-            <path d="M7 7V5a5 5 0 0110 0v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-            <path d="M12 12v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M7 7V5a5 5 0 0110 0v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            <path d="M12 12v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
         ),
         href: "https://yandex.uz/maps/-/CPC6FN8j",
@@ -1412,8 +1482,8 @@ export default function MiniAppShell({
         label: t.profile.aboutCompany,
         icon: (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-            <path d="M14 2v6h6M9 13h6M9 17h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+            <path d="M14 2v6h6M9 13h6M9 17h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
         ),
         href: `https://t.me/${app.botUsername}`,
@@ -1422,8 +1492,8 @@ export default function MiniAppShell({
         label: t.profile.publicOffer,
         icon: (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <rect x="5" y="2" width="14" height="20" rx="2" stroke="currentColor" strokeWidth="1.8"/>
-            <path d="M9 7h6M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <rect x="5" y="2" width="14" height="20" rx="2" stroke="currentColor" strokeWidth="1.8" />
+            <path d="M9 7h6M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
         ),
         href: `https://t.me/${app.botUsername}`,
@@ -1432,8 +1502,8 @@ export default function MiniAppShell({
         label: t.profile.privacyPolicy,
         icon: (
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V6l-9-4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-            <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V6l-9-4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+            <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         ),
         href: `https://t.me/${app.botUsername}`,
@@ -1449,7 +1519,7 @@ export default function MiniAppShell({
             <div className="rounded-3xl bg-[var(--app-surface-strong)] p-6 flex flex-col items-center text-center gap-3">
               <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-sm">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12h14M13 6l6 6-6 6" stroke="var(--app-accent)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M5 12h14M13 6l6 6-6 6" stroke="var(--app-accent)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               <p className="font-bold text-[var(--app-text)] text-lg leading-snug">{t.profile.loginTitle}</p>
@@ -1479,9 +1549,8 @@ export default function MiniAppShell({
                   <p className="text-[var(--app-text-soft)]">{t.profile.noUserData}</p>
                 )}
               </div>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                isAuth ? "bg-emerald-100 text-emerald-700" : "bg-[var(--app-muted)] text-[var(--app-text-soft)]"
-              }`}>
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${isAuth ? "bg-emerald-100 text-emerald-700" : "bg-[var(--app-muted)] text-[var(--app-text-soft)]"
+                }`}>
                 {isAuth ? t.common.authenticated : t.common.telegram}
               </span>
             </div>
@@ -1507,7 +1576,7 @@ export default function MiniAppShell({
             className="flex items-center justify-center gap-3 w-full rounded-2xl bg-[var(--app-accent)] py-4 text-base font-bold text-white"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="white"/>
+              <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="white" />
             </svg>
             {t.profile.contactUs}
           </a>
@@ -1522,7 +1591,7 @@ export default function MiniAppShell({
             <div className="flex items-start gap-3 mb-3">
               <div className="w-9 h-9 rounded-full bg-[var(--app-muted)] flex items-center justify-center shrink-0 mt-0.5 text-[var(--app-text-soft)]">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor" />
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
@@ -1532,20 +1601,20 @@ export default function MiniAppShell({
                 <p className="text-xs text-[var(--app-text-soft)] mt-0.5">Ташкент</p>
               </div>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[var(--app-text-soft)] shrink-0 mt-1">
-                <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <div className="space-y-1.5 pl-12">
               <div className="flex items-center gap-2 text-xs text-[var(--app-text-soft)]">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/><path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" /><path d="M12 7v5l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
                 <span>09:00 – 22:30</span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="var(--app-accent)"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="var(--app-accent)" /></svg>
                 <span className="text-[var(--app-accent)] font-medium">+998 88 808 87 87</span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="var(--app-accent)"/></svg>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="var(--app-accent)" /></svg>
                 <span className="text-[var(--app-accent)] font-medium">+998 99 726 43 44</span>
               </div>
             </div>
@@ -1559,16 +1628,15 @@ export default function MiniAppShell({
                 href={item.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center gap-4 px-4 py-4 active:bg-[var(--app-muted)] transition-colors ${
-                  i < menuItems.length - 1 ? "border-b border-[var(--app-border)]" : ""
-                }`}
+                className={`flex items-center gap-4 px-4 py-4 active:bg-[var(--app-muted)] transition-colors ${i < menuItems.length - 1 ? "border-b border-[var(--app-border)]" : ""
+                  }`}
               >
                 <div className="w-10 h-10 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text-soft)] shrink-0">
                   {item.icon}
                 </div>
                 <span className="flex-1 text-sm font-medium text-[var(--app-text)]">{item.label}</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[var(--app-text-soft)]">
-                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </a>
             ))}
@@ -1576,8 +1644,8 @@ export default function MiniAppShell({
             <div className="flex items-center gap-3 px-4 py-3.5 border-t border-[var(--app-border)]">
               <div className="w-10 h-10 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text-soft)] shrink-0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/>
-                  <path d="M12 3c-2.5 3-4 5.7-4 9s1.5 6 4 9M12 3c2.5 3 4 5.7 4 9s-1.5 6-4 9M3 12h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M12 3c-2.5 3-4 5.7-4 9s1.5 6 4 9M12 3c2.5 3 4 5.7 4 9s-1.5 6-4 9M3 12h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
                 </svg>
               </div>
               <span className="flex-1 text-sm font-medium text-[var(--app-text)]">{t.profile.appLanguage}</span>
@@ -1587,11 +1655,10 @@ export default function MiniAppShell({
                     key={option}
                     type="button"
                     onClick={() => switchLocale(option)}
-                    className={`rounded-md px-2 py-1 text-[11px] font-semibold transition ${
-                      option === locale
-                        ? "bg-[var(--app-accent)] text-white"
-                        : "bg-[var(--app-muted)] text-[var(--app-text-soft)]"
-                    }`}
+                    className={`rounded-md px-2 py-1 text-[11px] font-semibold transition ${option === locale
+                      ? "bg-[var(--app-accent)] text-white"
+                      : "bg-[var(--app-muted)] text-[var(--app-text-soft)]"
+                      }`}
                   >
                     {option.toUpperCase()}
                   </button>
@@ -1608,16 +1675,16 @@ export default function MiniAppShell({
               <a href="https://www.instagram.com/croissant_eco/" target="_blank" rel="noopener noreferrer"
                 className="w-12 h-12 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text)]">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.8"/>
-                  <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.8"/>
-                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+                  <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.8" />
+                  <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.8" />
+                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
                 </svg>
               </a>
               {/* Telegram channel */}
               <a href="https://t.me/croissantbydeco" target="_blank" rel="noopener noreferrer"
                 className="w-12 h-12 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text)]">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <path d="M21.8 2.8L2.4 10.4c-1.3.5-1.3 1.3-.2 1.6l4.9 1.5 11.3-7.1c.5-.3 1-.1.6.2l-9.1 8.2v3.2c0 .7.3.9.8.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8L23 3.8c.3-1.2-.4-1.7-1.2-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                  <path d="M21.8 2.8L2.4 10.4c-1.3.5-1.3 1.3-.2 1.6l4.9 1.5 11.3-7.1c.5-.3 1-.1.6.2l-9.1 8.2v3.2c0 .7.3.9.8.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8L23 3.8c.3-1.2-.4-1.7-1.2-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
                 </svg>
               </a>
             </div>
@@ -1627,526 +1694,6 @@ export default function MiniAppShell({
           <p className="text-center text-xs text-[var(--app-text-soft)] pb-2">
             {t.profile.poweredBy} {app.brandName}
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  // ─── search overlay ───────────────────────────────────────────────────────
-
-  function SearchOverlay() {
-    return (
-      <div className="fixed inset-0 z-50 bg-[var(--app-bg)] flex flex-col fade-in">
-        {/* Search header */}
-        <div className="flex items-center gap-3 px-4 pb-3 border-b border-[var(--app-border)]" style={{ paddingTop: `${topPad + 10}px` }}>
-          <div className="flex flex-1 items-center gap-3 rounded-[16px] bg-[var(--app-muted)] px-4 py-2.5">
-            <span className="text-[var(--app-text-soft)]"><SearchIcon /></span>
-            <input
-              autoFocus
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t.search.placeholder}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--app-text-soft)]"
-            />
-            {query && (
-              <button type="button" onClick={() => setQuery("")} className="text-[var(--app-text-soft)]">
-                <CloseIcon />
-              </button>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => { setSearchOpen(false); setQuery(""); }}
-            className="text-sm font-semibold text-[var(--app-text)]"
-          >
-            {t.common.cancel}
-          </button>
-        </div>
-
-        {/* Results */}
-        <div className="flex-1 overflow-y-auto px-4 py-3">
-          {!deferredQuery ? (
-            <div className="py-10 text-center text-[var(--app-text-soft)]">
-              <p className="text-3xl mb-3">🔍</p>
-              <p className="text-sm">{t.search.emptyPrompt}</p>
-            </div>
-          ) : searchResults.length === 0 ? (
-            <div className="py-10 text-center text-[var(--app-text-soft)]">
-              <p className="text-3xl mb-3">😔</p>
-              <p className="text-sm">{t.search.noResults(deferredQuery)}</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {searchResults.map((product) => {
-                const qty = getQuantity(product.id);
-                return (
-                  <div
-                    key={product.id}
-                    className="flex items-center gap-3 rounded-[18px] bg-[var(--app-surface)] border border-[var(--app-border)] p-3"
-                    onClick={() => { setSearchOpen(false); setQuery(""); setSelectedProduct(product); }}
-                  >
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-[12px] bg-[var(--app-muted)]">
-                      {product.imageUrl && (
-                        <Image src={product.imageUrl} alt={product.title} fill sizes="48px" className="object-cover" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[var(--app-text)]">{product.title}</p>
-                      <p className="text-xs text-[var(--app-text-soft)]">{product.categoryTitle}</p>
-                    </div>
-                    <div className="shrink-0 text-right" onClick={(e) => e.stopPropagation()}>
-                      <p className="text-sm font-bold text-[var(--app-text)]">{formatPrice(product.price, product.currency, locale)}</p>
-                      {qty === 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => void setProductQuantity(product.id, 1)}
-                          className="mt-1 rounded-full bg-[var(--app-accent)] px-3 py-1 text-xs font-semibold text-white"
-                        >
-                          {t.search.addButton}
-                        </button>
-                      ) : (
-                        <QuantityControl
-                          quantity={qty}
-                          onDecrement={() => void setProductQuantity(product.id, qty - 1)}
-                          onIncrement={() => void setProductQuantity(product.id, qty + 1)}
-                          busy={isCartBusy}
-                          size="sm"
-                        />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // ─── order detail sheet ───────────────────────────────────────────────────
-
-  function OrderDetailSheet({ order }: { order: OrderReceipt }) {
-    const paymentLabel = translatePaymentMethod(locale, order.paymentMethod);
-    const effectiveStatus = liveStatus[order.orderId] ?? order.status ?? "pending";
-    const step = statusToStep(effectiveStatus);
-    const eta = formatEtaText(locale, order.createdAt, step);
-
-    const statusColors = [
-      "bg-amber-100 text-amber-700",
-      "bg-blue-100 text-blue-700",
-      "bg-[var(--app-accent-soft)] text-[var(--app-accent-strong)]",
-      "bg-emerald-100 text-emerald-700",
-    ];
-    const statusLabels = t.delivery.steps.map((deliveryStep) => deliveryStep.label);
-
-    const dragHandlers = makeSheetDragHandlers(
-      sheetRef, sheetDragStartY, sheetDragCurrentY, sheetDragTime,
-      () => setSelectedOrder(null),
-    );
-
-    return (
-      <div className="fixed inset-0 z-50 flex items-end" onClick={(e) => { if (e.target === e.currentTarget) setSelectedOrder(null); }}>
-        <div className="absolute inset-0 bg-black/40 overlay-in" onClick={() => setSelectedOrder(null)} />
-        <div ref={sheetRef} className="relative z-10 w-full max-w-[430px] mx-auto rounded-t-[28px] bg-[var(--app-bg)] flex flex-col sheet-up" style={{ maxHeight: "92vh" }}>
-
-          {/* Drag handle */}
-          <div className="flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing touch-none select-none"
-            style={{ paddingTop: 14, paddingBottom: 14 }}
-            {...dragHandlers}>
-            <div className="h-1.5 w-12 rounded-full bg-[var(--app-border)]" />
-          </div>
-
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 pb-3 pt-1 shrink-0">
-            <div>
-              <p className="font-bold text-lg text-[var(--app-text)]">#{order.orderId.slice(0, 8).toUpperCase()}</p>
-              <p className="text-xs text-[var(--app-text-soft)] mt-0.5">
-                {new Intl.DateTimeFormat(intlLocale, {
-                  day: "numeric",
-                  month: "long",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(order.createdAt))}
-              </p>
-            </div>
-            <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${statusColors[step]}`}>
-              {statusLabels[step]}
-            </span>
-          </div>
-
-          {/* ── Status stepper ───────────────────────────────────────── */}
-          <div className="px-5 pb-4 shrink-0">
-            <div className="relative flex justify-between items-start">
-              {/* Progress track */}
-              <div className="absolute top-4 left-4 right-4 h-0.5 bg-[var(--app-border)]">
-                <div className="h-full bg-[var(--app-accent)] transition-all duration-700 ease-out"
-                  style={{ width: `${(step / 3) * 100}%` }} />
-              </div>
-              {t.delivery.steps.map((s, i) => (
-                <div key={i} className="flex flex-col items-center gap-1.5 relative z-10 w-[25%]">
-                  <div className={`h-8 w-8 rounded-full flex items-center justify-center text-sm transition-all duration-500 ${i < step ? "bg-[var(--app-accent)] shadow-sm" :
-                    i === step ? "bg-[var(--app-accent)] shadow-md ring-4 ring-[var(--app-accent-soft)]" :
-                      "bg-[var(--app-muted)] border border-[var(--app-border)]"
-                    }`}>
-                    {i < step ? "✓" : s.icon}
-                  </div>
-                  <p className={`text-[10px] font-medium text-center leading-tight ${i === step ? "text-[var(--app-accent)]" : i < step ? "text-[var(--app-text)]" : "text-[var(--app-text-soft)]"
-                    }`}>{s.label}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* ETA pill */}
-            {step < 3 && (
-              <div className="mt-3 flex items-center justify-center gap-2">
-                <span className="text-[var(--app-accent)]">🕐</span>
-                <span className="text-sm font-semibold text-[var(--app-accent)]">{eta}</span>
-                <span className="text-xs text-[var(--app-text-soft)]">· {t.common.updatesEvery20Seconds}</span>
-              </div>
-            )}
-          </div>
-
-          {/* ── Delivery map (Leaflet — real map with moving courier) ─── */}
-          {step >= 0 && step < 3 && (() => {
-            const coords = customerCoords[order.orderId];
-            const dest = coords ?? RESTAURANT; // fallback while geocoding
-            // Interpolate courier lat/lon between restaurant and customer
-            const progress = courierOffset;
-            const cLat = RESTAURANT.lat + (dest.lat - RESTAURANT.lat) * progress;
-            const cLon = RESTAURANT.lon + (dest.lon - RESTAURANT.lon) * progress;
-            return (
-              <div className="px-5 pb-4 shrink-0">
-                <div className="relative rounded-2xl overflow-hidden border border-[var(--app-border)]" style={{ height: 200 }}>
-                  <DeliveryMap
-                    restaurantLat={RESTAURANT.lat}
-                    restaurantLon={RESTAURANT.lon}
-                    customerLat={dest.lat}
-                    customerLon={dest.lon}
-                    courierLat={cLat}
-                    courierLon={cLon}
-                    step={step}
-                    apiKey={app.yandexMapsApiKey ?? ""}
-                  />
-                  {/* ETA chip overlay */}
-                  <div className="absolute bottom-3 right-3 z-[500] bg-white/95 backdrop-blur-sm rounded-xl px-3 py-1.5 shadow-md pointer-events-none">
-                    <p className="text-xs font-bold text-[var(--app-text)] leading-none">{eta}</p>
-                    <p className="text-[10px] text-[var(--app-text-soft)] mt-0.5">{t.common.toYou}</p>
-                  </div>
-                  {/* Loading overlay while geocoding */}
-                  {!coords && (
-                    <div className="absolute inset-0 z-[400] flex items-center justify-center bg-[var(--app-muted)]/60 backdrop-blur-[2px]">
-                      <span className="text-sm text-[var(--app-text-soft)] animate-pulse">{t.common.routeLoading}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* ── Scrollable detail ────────────────────────────────────── */}
-          <div className="overflow-y-auto px-5 space-y-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)" }}>
-
-            {/* Items */}
-            <div className="store-panel rounded-[20px] overflow-hidden">
-              <p className="px-4 pt-4 pb-2 text-xs font-semibold text-[var(--app-text-soft)] uppercase tracking-wide">{t.orders.orderContents}</p>
-              <div className="divide-y divide-[var(--app-border)]">
-                {order.lines.map((line) => (
-                  <div key={line.productId} className="flex items-center gap-3 px-4 py-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[var(--app-muted)] text-base">🥐</div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-[var(--app-text)] leading-tight">{line.title}</p>
-                      <p className="text-xs text-[var(--app-text-soft)] mt-0.5">{formatPrice(line.unitPrice, order.currency, locale)} × {line.quantity}</p>
-                    </div>
-                    <p className="text-sm font-bold text-[var(--app-text)] shrink-0">{formatPrice(line.lineTotal, order.currency, locale)}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--app-border)] bg-[var(--app-muted)]">
-                <span className="font-semibold text-[var(--app-text)]">{t.common.total}</span>
-                <span className="font-bold text-lg text-[var(--app-accent)]">{formatPrice(order.total, order.currency, locale)}</span>
-              </div>
-            </div>
-
-            {/* Delivery info */}
-            <div className="store-panel rounded-[20px] divide-y divide-[var(--app-border)]">
-              <div className="flex justify-between items-start gap-3 px-4 py-3">
-                <span className="text-sm text-[var(--app-text-soft)] shrink-0">{t.common.address}</span>
-                <span className="text-sm font-medium text-[var(--app-text)] text-right">{order.address}</span>
-              </div>
-              <div className="flex justify-between items-center gap-3 px-4 py-3">
-                <span className="text-sm text-[var(--app-text-soft)]">{t.common.time}</span>
-                <span className="text-sm font-medium text-[var(--app-text)]">{order.deliveryTime || t.delivery.asap}</span>
-              </div>
-              <div className="flex justify-between items-center gap-3 px-4 py-3">
-                <span className="text-sm text-[var(--app-text-soft)]">{t.common.payment}</span>
-                <span className="text-sm font-medium text-[var(--app-text)]">{paymentLabel}</span>
-              </div>
-            </div>
-
-            {/* Contact */}
-            <div className="store-panel rounded-[20px] divide-y divide-[var(--app-border)]">
-              <div className="flex justify-between items-center gap-3 px-4 py-3">
-                <span className="text-sm text-[var(--app-text-soft)]">{t.common.name}</span>
-                <span className="text-sm font-medium text-[var(--app-text)]">{order.customerName}</span>
-              </div>
-              <div className="flex justify-between items-center gap-3 px-4 py-3">
-                <span className="text-sm text-[var(--app-text-soft)]">{t.common.phone}</span>
-                <a href={`tel:${order.phone}`} className="text-sm font-medium text-[var(--app-accent)]">{order.phone}</a>
-              </div>
-            </div>
-
-            {order.comment && (
-              <div className="store-panel rounded-[20px] px-4 py-3">
-                <p className="text-xs text-[var(--app-text-soft)] mb-1">{t.common.comment}</p>
-                <p className="text-sm text-[var(--app-text)]">{order.comment}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ─── location modal ───────────────────────────────────────────────────────
-
-  function LocationModal() {
-    const draft = locationDraft;
-    const setDraft = setLocationDraft;
-    const locating = locationLocating;
-    const setLocating = setLocationLocating;
-    const locError = locationError;
-    const setLocError = setLocationError;
-
-    async function reverseGeocode(lat: number, lon: number) {
-      setLocationCoords({ lat, lon });
-      try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=${locale}`,
-          { headers: { "User-Agent": "CroissantMiniApp/1.0" } },
-        );
-        const data = (await res.json()) as {
-          display_name?: string;
-          address?: {
-            road?: string; pedestrian?: string; house_number?: string;
-            suburb?: string; neighbourhood?: string;
-            city?: string; town?: string; village?: string;
-          };
-        };
-        const a = data.address ?? {};
-        const parts = [
-          a.road ?? a.pedestrian,
-          a.house_number,
-          a.suburb ?? a.neighbourhood,
-          a.city ?? a.town ?? a.village,
-        ].filter(Boolean);
-        setDraft(parts.length ? parts.join(", ") : (data.display_name ?? ""));
-      } catch {
-        setLocError(t.location.reverseGeocodeFailed);
-      }
-    }
-
-    async function detectLocation() {
-      setLocating(true);
-      setLocError("");
-      if (!navigator.geolocation) {
-        setLocError(t.location.geolocationUnsupported);
-        setLocating(false);
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          await reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-          setLocating(false);
-        },
-        () => {
-          setLocError(t.location.geolocationDenied);
-          setLocating(false);
-        },
-        { timeout: 10000, enableHighAccuracy: true },
-      );
-    }
-
-    function save() {
-      if (!draft.trim()) return;
-      setForm((c) => ({ ...c, address: draft.trim() }));
-      setLocationOpen(false);
-    }
-
-    const locDragHandlers = makeSheetDragHandlers(
-      locSheetRef, locDragStart, locDragCurrent, locDragTime,
-      () => setLocationOpen(false),
-    );
-
-    return (
-      <div
-        className="fixed inset-0 z-50 flex items-end"
-        onClick={(e) => { if (e.target === e.currentTarget) setLocationOpen(false); }}
-      >
-        <div className="absolute inset-0 bg-black/40 overlay-in" onClick={() => setLocationOpen(false)} />
-        <div ref={locSheetRef} className="relative z-10 w-full max-w-[430px] mx-auto rounded-t-[28px] bg-[var(--app-bg)] sheet-up"
-          style={{ paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 20px)` }}>
-          {/* Drag handle */}
-          <div className="flex justify-center items-center cursor-grab active:cursor-grabbing touch-none select-none"
-            style={{ paddingTop: 14, paddingBottom: 14 }}
-            {...locDragHandlers}>
-            <div className="h-1.5 w-12 rounded-full bg-[var(--app-border)]" />
-          </div>
-          <div className="px-5 pb-5">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-[var(--app-text)]">{t.location.title}</h2>
-              <button
-                type="button"
-                onClick={() => setLocationOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--app-muted)] text-[var(--app-text-soft)]"
-              >
-                <CloseIcon />
-              </button>
-            </div>
-
-            {/* GPS button */}
-            <button
-              type="button"
-              disabled={locating}
-              onClick={() => void detectLocation()}
-              className="w-full flex items-center gap-3 rounded-2xl bg-[var(--app-accent-soft)] border border-[var(--app-accent)]/30 px-4 py-3.5 mb-4 transition-all active:scale-95 disabled:opacity-60"
-            >
-              <span className="text-[var(--app-accent)]"><LocationIcon /></span>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-[var(--app-accent)]">
-                  {locating ? t.location.locating : t.location.detectLocation}
-                </p>
-                <p className="text-xs text-[var(--app-text-soft)] mt-0.5">{t.location.gpsHint}</p>
-              </div>
-              {locating && (
-                <svg className="ml-auto h-4 w-4 animate-spin text-[var(--app-accent)]" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeDasharray="32" strokeDashoffset="12" />
-                </svg>
-              )}
-            </button>
-
-            {locError && (
-              <p className="text-xs text-rose-500 mb-3 px-1">{locError}</p>
-            )}
-
-            {/* Map preview */}
-            {locationCoords && (
-              <div className="mb-4 rounded-2xl overflow-hidden border border-[var(--app-border)] fade-in">
-                <iframe
-                  title={t.common.mapTitle}
-                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${locationCoords.lon - 0.006},${locationCoords.lat - 0.004},${locationCoords.lon + 0.006},${locationCoords.lat + 0.004}&layer=mapnik&marker=${locationCoords.lat},${locationCoords.lon}`}
-                  style={{ width: "100%", height: "180px", border: 0, display: "block" }}
-                  loading="lazy"
-                />
-              </div>
-            )}
-
-            {/* Manual input */}
-            <p className="text-xs text-[var(--app-text-soft)] mb-2 px-1">{t.common.manually}</p>
-            <textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder={t.location.addressPlaceholder}
-              rows={3}
-              className="store-input resize-none mb-4"
-              autoFocus={!draft}
-            />
-
-            <button
-              type="button"
-              disabled={!draft.trim()}
-              onClick={save}
-              className="w-full rounded-[16px] bg-[var(--app-accent)] py-4 text-base font-bold text-white transition-all active:scale-95 disabled:opacity-40"
-            >
-              {t.common.saveAddress}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ─── product modal ────────────────────────────────────────────────────────
-
-  function ProductModal({ product }: { product: CatalogProduct }) {
-    const qty = getQuantity(product.id);
-    const prodDragHandlers = makeSheetDragHandlers(
-      prodSheetRef, prodDragStart, prodDragCurrent, prodDragTime,
-      () => setSelectedProduct(null),
-    );
-    return (
-      <div
-        className="fixed inset-0 z-50 flex items-end"
-        onClick={(e) => { if (e.target === e.currentTarget) setSelectedProduct(null); }}
-      >
-        <div className="absolute inset-0 bg-black/40 overlay-in" onClick={() => setSelectedProduct(null)} />
-        <div ref={prodSheetRef} className="relative z-10 w-full max-w-[430px] mx-auto rounded-t-[28px] bg-[var(--app-bg)] overflow-hidden max-h-[85vh] flex flex-col sheet-up">
-          {/* Drag handle */}
-          <div className="flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing touch-none select-none"
-            style={{ paddingTop: 14, paddingBottom: 14 }}
-            {...prodDragHandlers}>
-            <div className="h-1.5 w-12 rounded-full bg-white/50" />
-          </div>
-          {/* Image */}
-          <div className="relative aspect-[4/3] bg-[var(--app-muted)] shrink-0">
-            {product.imageUrl ? (
-              <Image src={product.imageUrl} alt={product.title} fill sizes="430px" className="object-cover" />
-            ) : (
-              <div className="flex h-full items-center justify-center text-5xl">🥐</div>
-            )}
-            <button
-              type="button"
-              onClick={() => setSelectedProduct(null)}
-              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="overflow-y-auto p-5 flex-1">
-            <p className="text-xs text-[var(--app-text-soft)] mb-1">{product.categoryTitle}</p>
-            <h2 className="text-xl font-bold text-[var(--app-text)]">{product.title}</h2>
-            {product.description && (
-              <p className="mt-2 text-sm leading-relaxed text-[var(--app-text-soft)]">
-                {product.description}
-              </p>
-            )}
-            {product.weight > 0 && (
-              <p className="mt-2 text-xs text-[var(--app-text-soft)]">{t.common.weight}: {product.weight} g</p>
-            )}
-          </div>
-
-          {/* CTA */}
-          <div className="p-4 border-t border-[var(--app-border)] bg-[var(--app-bg)]">
-            {qty === 0 ? (
-              <button
-                type="button"
-                disabled={isCartBusy}
-                onClick={() => { void setProductQuantity(product.id, 1); setSelectedProduct(null); }}
-                className="w-full rounded-[18px] bg-[var(--app-accent)] py-4 text-base font-bold text-white transition active:scale-95 disabled:opacity-50"
-              >
-                {t.product.addToCart} · {formatPrice(product.price, product.currency, locale)}
-              </button>
-            ) : (
-              <div className="flex items-center justify-between">
-                <QuantityControl
-                  quantity={qty}
-                  onDecrement={() => void setProductQuantity(product.id, qty - 1)}
-                  onIncrement={() => void setProductQuantity(product.id, qty + 1)}
-                  busy={isCartBusy}
-                />
-                <button
-                  type="button"
-                  onClick={() => { setSelectedProduct(null); setView("cart"); }}
-                  className="rounded-[18px] bg-[var(--app-accent)] px-5 py-3 text-sm font-bold text-white"
-                >
-                  {t.product.goToCart} →
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     );
@@ -2199,8 +1746,29 @@ export default function MiniAppShell({
       </nav>
 
       {/* Overlays */}
-      {selectedOrder && OrderDetailSheet({ order: selectedOrder })}
-      {locationOpen && LocationModal()}
+      {selectedOrder && (
+        <OrderDetailSheet
+          order={selectedOrder}
+          locale={locale}
+          intlLocale={intlLocale}
+          liveStatus={liveStatus}
+          customerCoords={customerCoords}
+          courierOffset={courierOffset}
+          yandexMapsApiKey={app.yandexMapsApiKey ?? ""}
+          t={t}
+          onClose={() => setSelectedOrder(null)}
+        />
+      )}
+      {locationOpen && (
+        <LocationModal
+          locale={locale}
+          t={t}
+          locationCoords={locationCoords}
+          setLocationCoords={setLocationCoords}
+          onSave={(addr) => { setForm((f) => ({ ...f, address: addr })); setLocationOpen(false); }}
+          onClose={() => setLocationOpen(false)}
+        />
+      )}
       {mapPickerOpen && (
         <YandexMapPicker
           apiKey={app.yandexMapsApiKey ?? ""}
@@ -2218,8 +1786,36 @@ export default function MiniAppShell({
           }}
         />
       )}
-      {searchOpen && <SearchOverlay />}
-      {selectedProduct && <ProductModal product={selectedProduct} />}
+      {searchOpen && (
+        <SearchOverlay
+          query={query}
+          setQuery={setQuery}
+          deferredQuery={deferredQuery}
+          searchResults={searchResults}
+          locale={locale}
+          t={t}
+          topPad={topPad}
+          isCartBusy={isCartBusy}
+          getQuantity={getQuantity}
+          setProductQuantity={setProductQuantity}
+          onClose={() => { setSearchOpen(false); setQuery(""); }}
+          onSelectProduct={(p) => { setSearchOpen(false); setQuery(""); setSelectedProduct(p); }}
+        />
+      )}
+      {selectedProduct && (
+        <ProductModal
+          product={selectedProduct}
+          qty={getQuantity(selectedProduct.id)}
+          isCartBusy={isCartBusy}
+          locale={locale}
+          t={t}
+          onClose={() => setSelectedProduct(null)}
+          onAdd={() => { void setProductQuantity(selectedProduct.id, 1); setSelectedProduct(null); }}
+          onIncrement={() => void setProductQuantity(selectedProduct.id, getQuantity(selectedProduct.id) + 1)}
+          onDecrement={() => void setProductQuantity(selectedProduct.id, getQuantity(selectedProduct.id) - 1)}
+          onGoToCart={() => { setSelectedProduct(null); setView("cart"); }}
+        />
+      )}
     </main>
   );
 }

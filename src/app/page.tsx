@@ -12,7 +12,6 @@ import { getPublicConfig } from "@/lib/public-config";
 import { getServerCapabilities } from "@/lib/server-config";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = getTranslations("ru");
@@ -27,7 +26,7 @@ export default async function Home() {
   const headersStore = await headers();
   const locale = normalizeLocale(
     cookieStore.get(LOCALE_COOKIE_NAME)?.value ??
-      getPreferredLocale(headersStore.get("accept-language")),
+    getPreferredLocale(headersStore.get("accept-language")),
   );
 
   const [catalog, publicConfig, capabilities] = await Promise.all([

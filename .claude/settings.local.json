@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node scripts/setup-bot.mjs)",
+      "Bash(curl -s \"https://delivery.shoshiy.uz/openapi.json\")",
+      "Bash(python3 -c \" import json,sys spec = json.load\\(sys.stdin\\) auth = spec['paths'].get\\('/api/v1/auth/telegram',{}\\) print\\(json.dumps\\(auth, indent=2, ensure_ascii=False\\)\\) \")",
+      "Bash(npx tsc *)",
+      "Bash(curl -s \"https://delivery.shoshiy.uz/api/v1/products\")",
+      "Bash(vercel whoami *)",
+      "Bash(vercel link *)"
+    ]
+  }
+}

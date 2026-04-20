@@ -48,6 +48,10 @@ export default function RootLayout({
       className={`${manrope.variable} ${playfair.variable} antialiased`}
     >
       <head>
+        {/* Preconnect to external services used at runtime */}
+        <link rel="preconnect" href="https://api-maps.yandex.ru" />
+        <link rel="preconnect" href="https://core-renderer-tiles.maps.yandex.net" />
+        <link rel="preconnect" href="https://delivery.shoshiy.uz" />
         <Script
           src="https://telegram.org/js/telegram-web-app.js"
           strategy="beforeInteractive"
