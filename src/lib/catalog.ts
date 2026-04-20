@@ -11,7 +11,7 @@ const fetchCatalogCached = unstable_cache(
   async (locale: AppLocale) => {
     const config = getServerConfig();
 
-    if (false && isBackendApiConfigured()) { // Временно отключаем, чтобы не ждать 15 секунд
+    if (isBackendApiConfigured()) {
       try {
         const snapshot = await fetchBackendCatalogSnapshot(locale);
         if (snapshot.totalProducts > 0 || !config.allowCatalogFallback) {

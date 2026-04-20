@@ -1573,7 +1573,7 @@ export default function MiniAppShell({
               </a>
             ))}
             {/* Language row */}
-            <div className="flex items-center gap-4 px-4 py-4 border-t border-[var(--app-border)]">
+            <div className="flex items-center gap-3 px-4 py-3.5 border-t border-[var(--app-border)]">
               <div className="w-10 h-10 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text-soft)] shrink-0">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/>
@@ -1587,13 +1587,13 @@ export default function MiniAppShell({
                     key={option}
                     type="button"
                     onClick={() => switchLocale(option)}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                    className={`rounded-md px-2 py-1 text-[11px] font-semibold transition ${
                       option === locale
                         ? "bg-[var(--app-accent)] text-white"
                         : "bg-[var(--app-muted)] text-[var(--app-text-soft)]"
                     }`}
                   >
-                    {t.localeNames[option]}
+                    {option.toUpperCase()}
                   </button>
                 ))}
               </div>
@@ -1605,7 +1605,7 @@ export default function MiniAppShell({
             <p className="text-sm text-[var(--app-text-soft)] text-center">{t.profile.followUs}</p>
             <div className="flex gap-4">
               {/* Instagram */}
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+              <a href="https://www.instagram.com/croissant_eco/" target="_blank" rel="noopener noreferrer"
                 className="w-12 h-12 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text)]">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                   <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.8"/>
@@ -1613,18 +1613,11 @@ export default function MiniAppShell({
                   <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
                 </svg>
               </a>
-              {/* Telegram */}
-              <a href={`https://t.me/${app.botUsername}`} target="_blank" rel="noopener noreferrer"
+              {/* Telegram channel */}
+              <a href="https://t.me/croissantbydeco" target="_blank" rel="noopener noreferrer"
                 className="w-12 h-12 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text)]">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                   <path d="M21.8 2.8L2.4 10.4c-1.3.5-1.3 1.3-.2 1.6l4.9 1.5 11.3-7.1c.5-.3 1-.1.6.2l-9.1 8.2v3.2c0 .7.3.9.8.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8L23 3.8c.3-1.2-.4-1.7-1.2-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                </svg>
-              </a>
-              {/* Facebook */}
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
-                className="w-12 h-12 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text)]">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3V2z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
                 </svg>
               </a>
             </div>
