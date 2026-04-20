@@ -1690,6 +1690,7 @@ export default function MiniAppShell({
                     courierLat={cLat}
                     courierLon={cLon}
                     step={step}
+                    apiKey={app.yandexMapsApiKey ?? ""}
                   />
                   {/* ETA chip overlay */}
                   <div className="absolute bottom-3 right-3 z-[500] bg-white/95 backdrop-blur-sm rounded-xl px-3 py-1.5 shadow-md pointer-events-none">

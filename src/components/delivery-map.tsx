@@ -1,7 +1,29 @@
 "use client";
 
-import "leaflet/dist/leaflet.css";
 import { useEffect, useRef } from "react";
+
+declare global {
+  interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ymaps: any;
+    __ymapsLoading?: Promise<void>;
+  }
+}
+
+function loadYmaps(apiKey: string, lang: string): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (window.__ymapsLoading) return window.__ymapsLoading;
+  if (window.ymaps?.Placemark) return new Promise<void>((r) => window.ymaps.ready(r));
+  window.__ymapsLoading = new Promise<void>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = `https://api-maps.yandex.ru/2.1/?apikey=${apiKey}&lang=${lang}`;
+    script.async = true;
+    script.onload = () => window.ymaps.ready(resolve);
+    script.onerror = () => reject(new Error("Yandex Maps load error"));
+    document.head.appendChild(script);
+  });
+  return window.__ymapsLoading;
+}
 
 interface DeliveryMapProps {
   restaurantLat: number;
@@ -10,7 +32,9 @@ interface DeliveryMapProps {
   customerLon: number;
   courierLat: number;
   courierLon: number;
-  step: number; // 1=picked, 2=delivering, 3=delivered
+  step: number;
+  apiKey: string;
+  lang?: string;
 }
 
 export default function DeliveryMap({
@@ -18,149 +42,155 @@ export default function DeliveryMap({
   customerLat, customerLon,
   courierLat, courierLon,
   step: _step,
+  apiKey,
+  lang = "ru_RU",
 }: DeliveryMapProps) {
   void _step;
   const containerRef = useRef<HTMLDivElement>(null);
-  // Keep real Leaflet instances in refs so we don't re-create on every render
-  const mapRef = useRef<import("leaflet").Map | null>(null);
-  const courierRef = useRef<import("leaflet").Marker | null>(null);
-  const routeRef = useRef<import("leaflet").Polyline | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const courierMarkRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const routeDoneRef = useRef<any>(null);
 
-  // ── Init map once ──────────────────────────────────────────────────────────
+  // ── Init map ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+    if (!containerRef.current) return;
+    let destroyed = false;
 
-    // Clear stale Leaflet id left on the DOM node by React StrictMode's double-invoke
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    delete (containerRef.current as any)._leaflet_id;
-
-    // Leaflet must run client-side only — dynamic import to avoid SSR errors
-    import("leaflet").then((L) => {
-      if (!containerRef.current || mapRef.current) return; // guard for async gap
-      // Fix default icon paths broken by webpack
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
+    loadYmaps(apiKey, lang).then(() => {
+      if (destroyed || !containerRef.current || mapRef.current) return;
+      const Y = window.ymaps;
 
       const midLat = (restaurantLat + customerLat) / 2;
       const midLon = (restaurantLon + customerLon) / 2;
 
-      const map = L.map(containerRef.current!, {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const map = new Y.Map(containerRef.current, {
         center: [midLat, midLon],
         zoom: 14,
-        zoomControl: false,
-        attributionControl: false,
-        dragging: false,
-        scrollWheelZoom: false,
-        doubleClickZoom: false,
-        touchZoom: false,
-      });
+        controls: [],
+      }, { suppressMapOpenBlock: true });
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-      }).addTo(map);
+      mapRef.current = map;
 
-      // ── Restaurant pin ───────────────────────────────────────────────────
-      L.marker([restaurantLat, restaurantLon], {
-        icon: L.divIcon({
-          className: "",
-          html: `<div style="
-            width:36px;height:36px;border-radius:50%;
-            background:#c8864a;border:2px solid white;
-            display:flex;align-items:center;justify-content:center;
-            font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.25);
-          ">🏪</div>`,
-          iconSize: [36, 36],
-          iconAnchor: [18, 36],
-        }),
-      }).addTo(map);
-
-      // ── Customer (destination) pin ───────────────────────────────────────
-      L.marker([customerLat, customerLon], {
-        icon: L.divIcon({
-          className: "",
-          html: `<div style="display:flex;flex-direction:column;align-items:center;">
-            <div style="
+      // ── Restaurant pin ────────────────────────────────────────────────────
+      map.geoObjects.add(new Y.Placemark(
+        [restaurantLat, restaurantLon],
+        {},
+        {
+          iconLayout: "default#imageWithContent",
+          iconImageHref: "",
+          iconContentLayout: Y.templateLayoutFactory.createClass(
+            `<div style="
               width:36px;height:36px;border-radius:50%;
-              background:#2f7f5b;border:2px solid white;
+              background:#1c1c1e;border:2px solid white;
               display:flex;align-items:center;justify-content:center;
-              font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.25);
-            ">🏠</div>
-            <div style="width:2px;height:10px;background:#2f7f5b;"></div>
-          </div>`,
-          iconSize: [36, 46],
-          iconAnchor: [18, 46],
-        }),
-      }).addTo(map);
+              font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.3);
+            ">🏪</div>`,
+          ),
+          iconImageSize: [36, 36],
+          iconImageOffset: [-18, -36],
+        },
+      ));
 
-      // ── Route polyline ───────────────────────────────────────────────────
-      routeRef.current = L.polyline(
+      // ── Customer pin ──────────────────────────────────────────────────────
+      map.geoObjects.add(new Y.Placemark(
+        [customerLat, customerLon],
+        {},
+        {
+          iconLayout: "default#imageWithContent",
+          iconImageHref: "",
+          iconContentLayout: Y.templateLayoutFactory.createClass(
+            `<div style="display:flex;flex-direction:column;align-items:center;">
+              <div style="
+                width:36px;height:36px;border-radius:50%;
+                background:#2f7f5b;border:2px solid white;
+                display:flex;align-items:center;justify-content:center;
+                font-size:18px;box-shadow:0 2px 8px rgba(0,0,0,0.3);
+              ">🏠</div>
+              <div style="width:2px;height:8px;background:#2f7f5b;"></div>
+            </div>`,
+          ),
+          iconImageSize: [36, 44],
+          iconImageOffset: [-18, -44],
+        },
+      ));
+
+      // ── Route polyline ────────────────────────────────────────────────────
+      map.geoObjects.add(new Y.Polyline(
         [[restaurantLat, restaurantLon], [customerLat, customerLon]],
-        { color: "#c8864a", weight: 3, dashArray: "8,6", opacity: 0.9 }
-      ).addTo(map);
+        {},
+        { strokeColor: "#aaaaaa", strokeWidth: 3, strokeStyle: "dash" },
+      ));
 
-      // ── Courier marker (animated car) ────────────────────────────────────
-      courierRef.current = L.marker([courierLat, courierLon], {
-        icon: L.divIcon({
-          className: "",
-          html: `<div style="
-            font-size:26px;
-            filter:drop-shadow(0 2px 5px rgba(0,0,0,0.3));
-            transition:all 0.8s ease;
-          " class="courier-car-icon">🚗</div>`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 15],
-        }),
-        zIndexOffset: 1000,
-      }).addTo(map);
+      // ── Completed route overlay ───────────────────────────────────────────
+      const routeDone = new Y.Polyline(
+        [[restaurantLat, restaurantLon], [courierLat, courierLon]],
+        {},
+        { strokeColor: "#1c1c1e", strokeWidth: 4 },
+      );
+      map.geoObjects.add(routeDone);
+      routeDoneRef.current = routeDone;
 
-      // Fit map to show all 3 points
-      const bounds = L.latLngBounds([
+      // ── Courier marker ────────────────────────────────────────────────────
+      const courierMark = new Y.Placemark(
+        [courierLat, courierLon],
+        {},
+        {
+          iconLayout: "default#imageWithContent",
+          iconImageHref: "",
+          iconContentLayout: Y.templateLayoutFactory.createClass(
+            `<div style="
+              font-size:26px;
+              filter:drop-shadow(0 2px 5px rgba(0,0,0,0.3));
+            ">🚗</div>`,
+          ),
+          iconImageSize: [32, 32],
+          iconImageOffset: [-16, -16],
+        },
+      );
+      map.geoObjects.add(courierMark);
+      courierMarkRef.current = courierMark;
+
+      // Fit bounds
+      const bounds = Y.util.bounds.fromPoints([
         [restaurantLat, restaurantLon],
         [customerLat, customerLon],
         [courierLat, courierLon],
       ]);
-      map.fitBounds(bounds, { padding: [28, 28] });
-
-      mapRef.current = map;
-    });
+      map.setBounds(bounds, { checkZoomRange: true, duration: 0, padding: [28, 28, 28, 28] });
+    }).catch(() => { /* map unavailable */ });
 
     return () => {
+      destroyed = true;
       if (mapRef.current) {
-        mapRef.current.remove();
+        mapRef.current.destroy();
         mapRef.current = null;
-        courierRef.current = null;
-        routeRef.current = null;
+        courierMarkRef.current = null;
+        routeDoneRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Update courier position on every change ──────────────────────────────
+  // ── Update courier position ───────────────────────────────────────────────
   useEffect(() => {
-    if (!courierRef.current || !mapRef.current) return;
-    courierRef.current.setLatLng([courierLat, courierLon]);
-    // Pan map to keep courier visible
-    mapRef.current.panTo([courierLat, courierLon], { animate: true, duration: 0.8 });
+    if (!courierMarkRef.current) return;
+    courierMarkRef.current.geometry.setCoordinates([courierLat, courierLon]);
+    if (mapRef.current) {
+      mapRef.current.panTo([courierLat, courierLon], { flying: true, duration: 800 });
+    }
   }, [courierLat, courierLon]);
 
-  // ── Update route: draw "completed" segment ───────────────────────────────
+  // ── Update completed route segment ───────────────────────────────────────
   useEffect(() => {
-    if (!mapRef.current || !routeRef.current) return;
-    import("leaflet").then((L) => {
-      // Draw travelled portion in solid accent color
-      routeRef.current!.setStyle({ color: "#c8864a", weight: 3, dashArray: "8,6" });
-      // Add solid "travelled" overlay
-      L.polyline(
-        [[restaurantLat, restaurantLon], [courierLat, courierLon]],
-        { color: "#c8864a", weight: 4, opacity: 1 }
-      ).addTo(mapRef.current!);
-    });
-    // Only redraw on significant position changes
+    if (!routeDoneRef.current) return;
+    routeDoneRef.current.geometry.setCoordinates([
+      [restaurantLat, restaurantLon],
+      [courierLat, courierLon],
+    ]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Math.round(courierLat * 1000), Math.round(courierLon * 1000)]);
 
