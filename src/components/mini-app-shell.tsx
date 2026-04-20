@@ -2064,6 +2064,8 @@ export default function MiniAppShell({
       {locationOpen && LocationModal()}
       {mapPickerOpen && (
         <YandexMapPicker
+          apiKey={app.yandexMapsApiKey ?? ""}
+          lang={locale === "uz" ? "uz_UZ" : locale === "en" ? "en_US" : "ru_RU"}
           initialCoords={locationCoords ?? undefined}
           saveLabel={t.common.saveAddress}
           detectingLabel={t.location.locating}
