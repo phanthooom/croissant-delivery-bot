@@ -395,10 +395,10 @@ function makeSheetDragHandlers(
   }
   function dismiss() {
     if (!sheetEl.current) return;
-    sheetEl.current.style.transition = "transform 280ms cubic-bezier(0.32,0.72,0,1)";
-    sheetEl.current.style.transform = "translateY(100%)";
+    sheetEl.current.style.transition = "transform 300ms cubic-bezier(0.32,0.72,0,1)";
+    sheetEl.current.style.transform = "translateY(110%)";
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.("light");
-    setTimeout(onClose, 280);
+    setTimeout(onClose, 300);
   }
   function snap() {
     if (!sheetEl.current) return;
@@ -410,8 +410,8 @@ function makeSheetDragHandlers(
     const elapsed = Math.max(1, Date.now() - timeRef.current);
     const velocity = dy / elapsed; // px/ms
     currentRef.current = 0;
-    // tap (barely moved), fast flick, or dragged far enough → close
-    if (dy < 10 || velocity > 0.45 || dy > 90) dismiss();
+    // fast flick down OR dragged more than 80px → close; otherwise snap back
+    if (velocity > 0.4 || dy > 80) dismiss();
     else snap();
   }
   return { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp };
@@ -1615,10 +1615,11 @@ export default function MiniAppShell({
         <div className="absolute inset-0 bg-black/40 overlay-in" onClick={() => setSelectedOrder(null)} />
         <div ref={sheetRef} className="relative z-10 w-full max-w-[430px] mx-auto rounded-t-[28px] bg-[var(--app-bg)] flex flex-col sheet-up" style={{ maxHeight: "92vh" }}>
 
-          {/* Drag handle — tap or swipe down to close */}
-          <div className="flex justify-center pt-3 pb-2 shrink-0 cursor-grab active:cursor-grabbing touch-none select-none"
+          {/* Drag handle */}
+          <div className="flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing touch-none select-none"
+            style={{ paddingTop: 14, paddingBottom: 14 }}
             {...dragHandlers}>
-            <div className="h-1 w-10 rounded-full bg-[var(--app-border)]" />
+            <div className="h-1.5 w-12 rounded-full bg-[var(--app-border)]" />
           </div>
 
           {/* Header */}
@@ -1851,9 +1852,10 @@ export default function MiniAppShell({
         <div ref={locSheetRef} className="relative z-10 w-full max-w-[430px] mx-auto rounded-t-[28px] bg-[var(--app-bg)] sheet-up"
           style={{ paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + 20px)` }}>
           {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing touch-none select-none"
+          <div className="flex justify-center items-center cursor-grab active:cursor-grabbing touch-none select-none"
+            style={{ paddingTop: 14, paddingBottom: 14 }}
             {...locDragHandlers}>
-            <div className="h-1 w-10 rounded-full bg-[var(--app-border)]" />
+            <div className="h-1.5 w-12 rounded-full bg-[var(--app-border)]" />
           </div>
           <div className="px-5 pb-5">
             {/* Header */}
@@ -1946,9 +1948,10 @@ export default function MiniAppShell({
         <div className="absolute inset-0 bg-black/40 overlay-in" onClick={() => setSelectedProduct(null)} />
         <div ref={prodSheetRef} className="relative z-10 w-full max-w-[430px] mx-auto rounded-t-[28px] bg-[var(--app-bg)] overflow-hidden max-h-[85vh] flex flex-col sheet-up">
           {/* Drag handle */}
-          <div className="flex justify-center pt-3 pb-1 shrink-0 cursor-grab active:cursor-grabbing touch-none select-none"
+          <div className="flex justify-center items-center shrink-0 cursor-grab active:cursor-grabbing touch-none select-none"
+            style={{ paddingTop: 14, paddingBottom: 14 }}
             {...prodDragHandlers}>
-            <div className="h-1 w-10 rounded-full bg-white/40" />
+            <div className="h-1.5 w-12 rounded-full bg-white/50" />
           </div>
           {/* Image */}
           <div className="relative aspect-[4/3] bg-[var(--app-muted)] shrink-0">
