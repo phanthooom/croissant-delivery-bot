@@ -88,6 +88,17 @@ interface TranslationShape {
     cartStat: string;
     about: string;
     deliveryFrom: (minutes: number) => string;
+    loginTitle: string;
+    loginBody: string;
+    loginButton: string;
+    contactUs: string;
+    ourBranches: string;
+    aboutCompany: string;
+    publicOffer: string;
+    privacyPolicy: string;
+    appLanguage: string;
+    followUs: string;
+    poweredBy: string;
   };
   search: {
     placeholder: string;
@@ -258,6 +269,17 @@ const translations: Record<AppLocale, TranslationShape> = {
       cartStat: "Savatda",
       about: "Ilova haqida",
       deliveryFrom: (minutes) => `${minutes} daqiqadan`,
+      loginTitle: "Profilga kirish",
+      loginBody: "Buyurtma berish va kuzatib borish uchun bu zarur.",
+      loginButton: "Kirish",
+      contactUs: "Biz bilan bog'lanish",
+      ourBranches: "Bizning filiallar",
+      aboutCompany: "Kompaniya haqida",
+      publicOffer: "Ommaviy taklif",
+      privacyPolicy: "Maxfiylik siyosati",
+      appLanguage: "Ilova tili",
+      followUs: "Ijtimoiy tarmoqlarda obuna bo'ling",
+      poweredBy: "Qo'llab-quvvatlaydi",
     },
     search: {
       placeholder: "Taomlarni qidirish...",
@@ -430,6 +452,17 @@ const translations: Record<AppLocale, TranslationShape> = {
       cartStat: "В корзине",
       about: "О приложении",
       deliveryFrom: (minutes) => `от ${minutes} мин`,
+      loginTitle: "Войти в профиль",
+      loginBody: "Это необходимо, чтобы начать заказывать продукцию и отслеживать её.",
+      loginButton: "Войти",
+      contactUs: "Связаться с нами",
+      ourBranches: "Наши филиалы",
+      aboutCompany: "О компании",
+      publicOffer: "Публичная оферта",
+      privacyPolicy: "Политика конфиденциальности",
+      appLanguage: "Язык приложения",
+      followUs: "Подпишитесь на нас в социальных сетях",
+      poweredBy: "При поддержке",
     },
     search: {
       placeholder: "Поиск блюд...",
@@ -599,6 +632,17 @@ const translations: Record<AppLocale, TranslationShape> = {
       cartStat: "In cart",
       about: "About the app",
       deliveryFrom: (minutes) => `from ${minutes} min`,
+      loginTitle: "Sign in to profile",
+      loginBody: "Required to place orders and track them.",
+      loginButton: "Sign in",
+      contactUs: "Contact us",
+      ourBranches: "Our branches",
+      aboutCompany: "About company",
+      publicOffer: "Public offer",
+      privacyPolicy: "Privacy policy",
+      appLanguage: "App language",
+      followUs: "Follow us on social media",
+      poweredBy: "Powered by",
     },
     search: {
       placeholder: "Search dishes...",

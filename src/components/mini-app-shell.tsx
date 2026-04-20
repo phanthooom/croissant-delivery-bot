@@ -1396,102 +1396,207 @@ export default function MiniAppShell({
     const isAuth = session.backendAuthenticated;
     const phone = session.profile?.phone ?? form.phone;
 
-    return (
-      <div className="fade-in">
-        <div className="px-4 pb-3" style={{ paddingTop: `${topPad + 16}px` }}>
-          <h1 className="text-xl font-bold text-[var(--app-text)]">{t.profile.title}</h1>
-        </div>
+    const menuItems = [
+      {
+        label: t.profile.ourBranches,
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="7" width="18" height="13" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+            <path d="M7 7V5a5 5 0 0110 0v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <path d="M12 12v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+        ),
+        href: "https://yandex.uz/maps/-/CPC6FN8j",
+      },
+      {
+        label: t.profile.aboutCompany,
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+            <path d="M14 2v6h6M9 13h6M9 17h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+        ),
+        href: `https://t.me/${app.botUsername}`,
+      },
+      {
+        label: t.profile.publicOffer,
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="5" y="2" width="14" height="20" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+            <path d="M9 7h6M9 11h6M9 15h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+        ),
+        href: `https://t.me/${app.botUsername}`,
+      },
+      {
+        label: t.profile.privacyPolicy,
+        icon: (
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V6l-9-4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+            <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        ),
+        href: `https://t.me/${app.botUsername}`,
+      },
+    ];
 
-        <div className="px-4 pb-6 space-y-3">
-          {/* Auth status banner */}
-          {!inTelegram && (
-            <div className="rounded-2xl bg-[var(--app-accent-soft)] border border-[var(--app-border)] px-4 py-3 text-sm text-[var(--app-accent-strong)]">
-              <p className="font-semibold">{t.profile.authTitle}</p>
-              <p className="mt-1 leading-relaxed text-[var(--app-text-soft)]">
-                {t.profile.authBody(app.botUsername)}
-              </p>
+    return (
+      <div className="fade-in pb-8" style={{ paddingTop: `${topPad + 8}px` }}>
+        <div className="px-4 space-y-4">
+
+          {/* ── Login card (not in Telegram) or User card ── */}
+          {!inTelegram ? (
+            <div className="rounded-3xl bg-[var(--app-surface-strong)] p-6 flex flex-col items-center text-center gap-3">
+              <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14M13 6l6 6-6 6" stroke="var(--app-accent)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <p className="font-bold text-[var(--app-text)] text-lg leading-snug">{t.profile.loginTitle}</p>
+              <p className="text-sm text-[var(--app-text-soft)] leading-relaxed">{t.profile.loginBody}</p>
+              <a
+                href={`https://t.me/${app.botUsername}`}
+                className="mt-1 w-full rounded-2xl bg-[var(--app-accent)] py-4 text-base font-bold text-white text-center block"
+              >
+                {t.profile.loginButton}
+              </a>
+            </div>
+          ) : (
+            <div className="rounded-3xl bg-[var(--app-surface-strong)] p-4 flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[var(--app-accent)] text-xl font-bold text-white">
+                {user ? user.firstName.slice(0, 1).toUpperCase() : "?"}
+              </div>
+              <div className="min-w-0 flex-1">
+                {user ? (
+                  <>
+                    <p className="font-bold text-[var(--app-text)]">
+                      {user.firstName}{user.lastName ? ` ${user.lastName}` : ""}
+                    </p>
+                    {user.username && <p className="text-sm text-[var(--app-text-soft)]">@{user.username}</p>}
+                    {phone && <p className="text-sm text-[var(--app-text-soft)]">{phone}</p>}
+                  </>
+                ) : (
+                  <p className="text-[var(--app-text-soft)]">{t.profile.noUserData}</p>
+                )}
+              </div>
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                isAuth ? "bg-emerald-100 text-emerald-700" : "bg-[var(--app-muted)] text-[var(--app-text-soft)]"
+              }`}>
+                {isAuth ? t.common.authenticated : t.common.telegram}
+              </span>
             </div>
           )}
 
-          {/* User card */}
-          <div className="store-panel rounded-[22px] p-4 flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[var(--app-accent)] text-xl font-bold text-white">
-              {user ? user.firstName.slice(0, 1).toUpperCase() : "?"}
-            </div>
-            <div className="min-w-0 flex-1">
-              {user ? (
-                <>
-                  <p className="font-bold text-[var(--app-text)]">
-                    {user.firstName}{user.lastName ? ` ${user.lastName}` : ""}
-                  </p>
-                  {user.username && (
-                    <p className="text-sm text-[var(--app-text-soft)]">@{user.username}</p>
-                  )}
-                  {phone && (
-                    <p className="text-sm text-[var(--app-text-soft)]">{phone}</p>
-                  )}
-                </>
-              ) : (
-                <p className="text-[var(--app-text-soft)]">{t.profile.noUserData}</p>
-              )}
-            </div>
-            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${isAuth
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-[var(--app-muted)] text-[var(--app-text-soft)]"
-              }`}>
-              {isAuth ? t.common.authenticated : inTelegram ? t.common.telegram : t.common.browser}
-            </span>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="store-panel rounded-[22px] p-4 text-center">
-              <p className="text-2xl font-bold text-[var(--app-accent)]">{pastOrders.length}</p>
-              <p className="text-xs text-[var(--app-text-soft)] mt-1">{t.profile.ordersStat}</p>
-            </div>
-            <div className="store-panel rounded-[22px] p-4 text-center">
-              <p className="text-2xl font-bold text-[var(--app-accent)]">{cartCount}</p>
-              <p className="text-xs text-[var(--app-text-soft)] mt-1">{t.profile.cartStat}</p>
-            </div>
-          </div>
-
-          <div className="store-panel rounded-[22px] p-4 space-y-3">
-            <p className="text-sm font-semibold text-[var(--app-text)]">{t.localeLabel}</p>
-            <div className="grid grid-cols-3 gap-2">
-              {APP_LOCALES.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => switchLocale(option)}
-                  className={`rounded-[14px] px-3 py-2 text-xs font-semibold transition ${option === locale
-                    ? "bg-[var(--app-accent)] text-white"
-                    : "bg-[var(--app-muted)] text-[var(--app-text-soft)]"
-                    }`}
-                >
-                  {t.localeNames[option]}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* About */}
-          <div className="store-panel rounded-[22px] p-4 space-y-3">
-            <p className="text-sm font-semibold text-[var(--app-text)]">{t.profile.about}</p>
-            <div className="flex justify-between text-sm">
-              <span className="text-[var(--app-text-soft)]">{t.common.bot}</span>
-              <span className="font-medium text-[var(--app-text)]">@{app.botUsername}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-[var(--app-text-soft)]">{t.common.delivery}</span>
-              <span className="font-medium text-[var(--app-text)]">{t.profile.deliveryFrom(app.orderSlaMinutes)}</span>
-            </div>
-            {app.supportPhone && (
-              <div className="flex justify-between text-sm">
-                <span className="text-[var(--app-text-soft)]">{t.common.support}</span>
-                <a href={`tel:${app.supportPhone}`} className="font-medium text-[var(--app-accent)]">{app.supportPhone}</a>
+          {/* ── Stats (only when logged in) ── */}
+          {inTelegram && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-[var(--app-surface-strong)] p-4 text-center">
+                <p className="text-2xl font-bold text-[var(--app-accent)]">{pastOrders.length}</p>
+                <p className="text-xs text-[var(--app-text-soft)] mt-1">{t.profile.ordersStat}</p>
               </div>
-            )}
+              <div className="rounded-2xl bg-[var(--app-surface-strong)] p-4 text-center">
+                <p className="text-2xl font-bold text-[var(--app-accent)]">{cartCount}</p>
+                <p className="text-xs text-[var(--app-text-soft)] mt-1">{t.profile.cartStat}</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Contact us button ── */}
+          {app.supportPhone && (
+            <a
+              href={`tel:${app.supportPhone}`}
+              className="flex items-center justify-center gap-3 w-full rounded-2xl bg-[var(--app-accent)] py-4 text-base font-bold text-white"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" fill="white"/>
+              </svg>
+              {t.profile.contactUs}
+            </a>
+          )}
+
+          {/* ── Menu list ── */}
+          <div className="rounded-3xl bg-[var(--app-surface-strong)] overflow-hidden">
+            {menuItems.map((item, i) => (
+              <a
+                key={item.label}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-4 px-4 py-4 active:bg-[var(--app-muted)] transition-colors ${
+                  i < menuItems.length - 1 ? "border-b border-[var(--app-border)]" : ""
+                }`}
+              >
+                <div className="w-10 h-10 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text-soft)] shrink-0">
+                  {item.icon}
+                </div>
+                <span className="flex-1 text-sm font-medium text-[var(--app-text)]">{item.label}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[var(--app-text-soft)]">
+                  <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </a>
+            ))}
+            {/* Language row */}
+            <div className="flex items-center gap-4 px-4 py-4 border-t border-[var(--app-border)]">
+              <div className="w-10 h-10 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text-soft)] shrink-0">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/>
+                  <path d="M12 3c-2.5 3-4 5.7-4 9s1.5 6 4 9M12 3c2.5 3 4 5.7 4 9s-1.5 6-4 9M3 12h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <span className="flex-1 text-sm font-medium text-[var(--app-text)]">{t.profile.appLanguage}</span>
+              <div className="flex gap-1">
+                {APP_LOCALES.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => switchLocale(option)}
+                    className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                      option === locale
+                        ? "bg-[var(--app-accent)] text-white"
+                        : "bg-[var(--app-muted)] text-[var(--app-text-soft)]"
+                    }`}
+                  >
+                    {t.localeNames[option]}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
+
+          {/* ── Social links ── */}
+          <div className="flex flex-col items-center gap-4 py-2">
+            <p className="text-sm text-[var(--app-text-soft)] text-center">{t.profile.followUs}</p>
+            <div className="flex gap-4">
+              {/* Instagram */}
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
+                className="w-12 h-12 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text)]">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.8"/>
+                  <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.8"/>
+                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+                </svg>
+              </a>
+              {/* Telegram */}
+              <a href={`https://t.me/${app.botUsername}`} target="_blank" rel="noopener noreferrer"
+                className="w-12 h-12 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text)]">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M21.8 2.8L2.4 10.4c-1.3.5-1.3 1.3-.2 1.6l4.9 1.5 11.3-7.1c.5-.3 1-.1.6.2l-9.1 8.2v3.2c0 .7.3.9.8.5l2.3-2.2 4.7 3.5c.9.5 1.5.2 1.7-.8L23 3.8c.3-1.2-.4-1.7-1.2-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                </svg>
+              </a>
+              {/* Facebook */}
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
+                className="w-12 h-12 rounded-full bg-[var(--app-muted)] flex items-center justify-center text-[var(--app-text)]">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3V2z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* ── Footer ── */}
+          <p className="text-center text-xs text-[var(--app-text-soft)] pb-2">
+            {t.profile.poweredBy} {app.brandName}
+          </p>
         </div>
       </div>
     );
