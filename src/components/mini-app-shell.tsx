@@ -462,15 +462,8 @@ export default function MiniAppShell({
   const [showSplash, setShowSplash] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
   const openLocation = useCallback(() => {
-    if (app.yandexMapsApiKey) {
-      setMapPickerOpen(true);
-      return;
-    }
-    setLocationDraft(form.address);
-    setLocationError("");
-    setLocationCoords(null);
-    setLocationOpen(true);
-  }, [app.yandexMapsApiKey, form.address]);
+    setMapPickerOpen(true);
+  }, []);
   const [locationDraft, setLocationDraft] = useState("");
   const [locationLocating, setLocationLocating] = useState(false);
   const [locationError, setLocationError] = useState("");
@@ -2069,10 +2062,8 @@ export default function MiniAppShell({
       {/* Overlays */}
       {selectedOrder && OrderDetailSheet({ order: selectedOrder })}
       {locationOpen && LocationModal()}
-      {mapPickerOpen && app.yandexMapsApiKey && (
+      {mapPickerOpen && (
         <YandexMapPicker
-          apiKey={app.yandexMapsApiKey}
-          lang={locale === "uz" ? "uz_UZ" : locale === "en" ? "en_US" : "ru_RU"}
           initialCoords={locationCoords ?? undefined}
           saveLabel={t.common.saveAddress}
           detectingLabel={t.location.locating}
