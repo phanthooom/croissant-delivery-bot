@@ -2067,8 +2067,10 @@ export default function MiniAppShell({
           apiKey={app.yandexMapsApiKey ?? ""}
           lang={locale === "uz" ? "uz_UZ" : locale === "en" ? "en_US" : "ru_RU"}
           initialCoords={locationCoords ?? undefined}
+          topOffset={topPad}
           saveLabel={t.common.saveAddress}
           detectingLabel={t.location.locating}
+          detectLocationLabel={t.location.detectLocation}
           onClose={() => setMapPickerOpen(false)}
           onSave={(addr, c) => {
             if (addr) setForm((f) => ({ ...f, address: addr }));
