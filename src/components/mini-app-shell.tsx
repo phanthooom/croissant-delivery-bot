@@ -36,6 +36,10 @@ const DeliveryMap = dynamic(() => import("./delivery-map"), {
     </div>
   ),
 });
+
+const YandexMapPicker = dynamic(() => import("./yandex-map-picker"), {
+  ssr: false,
+});
 import type {
   BackendCart,
   BackendCartItem,
@@ -453,15 +457,20 @@ export default function MiniAppShell({
   const [orderState, setOrderState] = useState<OrderState>({ type: "idle", message: "" });
   const [pastOrders, setPastOrders] = useState<OrderReceipt[]>([]);
   const [locationOpen, setLocationOpen] = useState(false);
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderReceipt | null>(null);
   const [showSplash, setShowSplash] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
   const openLocation = useCallback(() => {
+    if (app.yandexMapsApiKey) {
+      setMapPickerOpen(true);
+      return;
+    }
     setLocationDraft(form.address);
     setLocationError("");
     setLocationCoords(null);
     setLocationOpen(true);
-  }, [form.address]);
+  }, [app.yandexMapsApiKey, form.address]);
   const [locationDraft, setLocationDraft] = useState("");
   const [locationLocating, setLocationLocating] = useState(false);
   const [locationError, setLocationError] = useState("");
@@ -2060,6 +2069,21 @@ export default function MiniAppShell({
       {/* Overlays */}
       {selectedOrder && OrderDetailSheet({ order: selectedOrder })}
       {locationOpen && LocationModal()}
+      {mapPickerOpen && app.yandexMapsApiKey && (
+        <YandexMapPicker
+          apiKey={app.yandexMapsApiKey}
+          lang={locale === "uz" ? "uz_UZ" : locale === "en" ? "en_US" : "ru_RU"}
+          initialCoords={locationCoords ?? undefined}
+          saveLabel={t.common.saveAddress}
+          detectingLabel={t.location.locating}
+          onClose={() => setMapPickerOpen(false)}
+          onSave={(addr, c) => {
+            if (addr) setForm((f) => ({ ...f, address: addr }));
+            setLocationCoords(c);
+            setMapPickerOpen(false);
+          }}
+        />
+      )}
       {searchOpen && <SearchOverlay />}
       {selectedProduct && <ProductModal product={selectedProduct} />}
     </main>

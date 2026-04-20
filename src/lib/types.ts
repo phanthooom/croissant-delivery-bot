@@ -50,6 +50,7 @@ export interface PublicAppConfig {
   supportPhone: string | null;
   catalogSourceUrl: string;
   orderSlaMinutes: number;
+  yandexMapsApiKey: string | null;
 }
 
 export interface ServerCapabilities {

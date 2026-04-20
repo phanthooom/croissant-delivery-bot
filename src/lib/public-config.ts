@@ -20,5 +20,6 @@ export function getPublicConfig(): PublicAppConfig {
       process.env.CATALOG_SOURCE_URL ||
       "https://croissant.delever.uz/ru",
     orderSlaMinutes: readNumber(process.env.ORDER_SLA_MINUTES, 15),
+    yandexMapsApiKey: process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY ?? null,
   };
 }
